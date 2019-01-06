@@ -40,7 +40,7 @@
         });
         $("#form-search").submit(function(event){
             event.preventDefault();
-            window.location.href = "/store/d#/search/" + $(this).serializeArray()[0].value;
+            window.location.href = "/store/search/" + $(this).serializeArray()[0].value;
         });
 
         var $starsLi = $('#stars li');
@@ -62,6 +62,11 @@
     });
 </script>
     <#-- for scripts/etc from d.xml or others, ie client rendered part of site that needs more JS -->
-    <#if footerScriptText?has_content>${footerScriptText}</#if>
+    <#if footerScriptText?has_content>
+    ${footerScriptText}
+    <script src="/store/components/ComponentsAccount.js"></script>
+    <script src="/store/components/ComponentsCheckout.js"></script>
+    <script src="/store/components/main.js"></script>
+    </#if>
 </body>
 </html>

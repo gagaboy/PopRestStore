@@ -38,7 +38,7 @@ storeComps.CheckOutPage = {
         },
         getCustomerInfo: function() { CustomerService.getCustomerInfo(this.axiosConfig)
             .then(function (data) { this.customerInfo = data; }.bind(this)); },
-        getCustomerAddress: function() {
+        getCustomerShippingAddresses: function() {
             CustomerService.getShippingAddresses(this.axiosConfig).then(function (data) {
                 this.listShippingAddress = data.postalAddressList;
             }.bind(this));
@@ -116,7 +116,7 @@ storeComps.CheckOutPage = {
 
             CustomerService.addShippingAddress(this.shippingAddress,this.axiosConfig).then(function (data) {
                 this.shippingAddress = {};
-                this.getCustomerAddress();
+                this.getCustomerShippingAddresses();
                 this.hideModal("addressFormModal");
             }.bind(this));
         },
@@ -186,43 +186,66 @@ storeComps.CheckOutPage = {
                 console.error(this.responseMessage);
             }.bind(this));
         },
-        addCartBillingShipping: function(option){
+        addCartBillingShipping: function(){
             var info = {
-                "shippingPostalContactMechId":this.addressOption.split(':')[0], "shippingTelecomContactMechId":this.addressOption.split(':')[1],
-                "paymentMethodId":this.paymentOption, "carrierPartyId":this.shippingOption.split(':')[0], "shipmentMethodEnumId":this.shippingOption.split(':')[1]
-            };  
-            
-            switch (option){
-                case "selectShippingMethod":
-                    this.selectShippingAddressStatus = "complete";
-                    this.selectShippingMethodStatus = "active";
-                    $('#selectShippingMethod').collapse("show");
-                    break;
-                case "selectPaymentMethod":
-                    this.selectShippingMethodStatus = "complete";
-                    this.selectPaymentMethodStatus = "active";
-                    $('#selectPaymentMethod').collapse("show");
-                    break;
-                case "placeOrder":
-                    this.selectPaymentMethodStatus = "complete";
-                    this.placeOrderStatus = "active";
-                    $('#placeOrder').collapse("show");
-                    break;
-            }
+                "shippingPostalContactMechId":this.addressOption.split(':')[0], 
+                "shippingTelecomContactMechId":this.addressOption.split(':')[1],
+                "paymentMethodId":this.paymentOption, 
+                "carrierPartyId":this.shippingOption.split(':')[0], 
+                "shipmentMethodEnumId":this.shippingOption.split(':')[1]
+            };
             ProductService.addCartBillingShipping(info,this.axiosConfig).then(function (data) {
                 this.paymentId = data;
                 this.getCartInfo();
             }.bind(this));
         },
-        setOptionNavbar: function(option) { this.optionNavbar = option; },
+        setCheckoutStepActive: function(step) { 
+            switch (step){
+                case "selectShippingAddress":
+                    this.selectShippingAddressStatus = "active";
+                    $('#shippingAddressCollapse').collapse("show");
+                    break;
+                case "selectShippingMethod":
+                    this.selectShippingMethodStatus = "active";
+                    $('#shippingMethodCollapse').collapse("show");
+                    break;
+                case "selectPaymentMethod":
+                    this.selectPaymentMethodStatus = "active";
+                    $('#paymentMethodCollapse').collapse("show");
+                    break;
+                case "placeOrder":
+                    this.placeOrderStatus = "active";
+                    $('#placeOrderCollapse').collapse("show");
+                    break;  
+            }
+        },
+        setCheckoutStepComplete: function(step) { 
+            switch (step){
+                case "selectShippingAddress":
+                    this.selectShippingAddressStatus = "complete";
+                    break;
+                case "selectShippingMethod":
+                    this.selectShippingMethodStatus = "complete";
+                    break;
+                case "selectPaymentMethod":
+                    this.selectPaymentMethodStatus = "complete";
+                    break;
+                case "placeOrder":
+                    this.placeOrderStatus = "complete";
+                    break;  
+            }
+        },    
+        setOptionNavbar: function(option) { 
+            this.optionNavbar = option; 
+        },
         getCustomerPaymentMethods: function() {
             CustomerService.getPaymentMethods(this.axiosConfig)
                 .then(function (data) { this.listPaymentMethods = data.methodInfoList; }.bind(this));
         },
-        setCartPlace: function() {
+        placeCartOrder: function() {
             var data = { "cardSecurityCodeByPaymentId": this.paymentId };
             this.isSpinner = true;
-            ProductService.setCartPlace(data,this.axiosConfig).then(function (data) {
+            ProductService.placeCartOrder(data,this.axiosConfig).then(function (data) {
                 if(data.orderHeader != null) {
                     this.$router.push({ name: 'successcheckout', params: { orderId: data.orderHeader.orderId }});
                 } else {
@@ -257,7 +280,7 @@ storeComps.CheckOutPage = {
         },
         deleteShippingAddress: function(contactMechId,contactMechPurposeId) {
             CustomerService.deleteShippingAddress(contactMechId,contactMechPurposeId, this.axiosConfig).then(function (data) {
-                this.getCustomerAddress();
+                this.getCustomerShippingAddresses();
             }.bind(this));
         },
         updateProductQuantity: function(item) {

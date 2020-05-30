@@ -26,6 +26,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="price" type="BigDecimal"/>
             <parameter name="listPrice" type="BigDecimal"/>
             <parameter name="priceUomId"/>
+            <parameter name="productId"/>
 
             <parameter name="productClassDescription"/>
             <parameter name="descriptionLong"/>
@@ -104,6 +105,7 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
+    <!-- TODO: this service is not adequately constrained, will get inventory from all facilities, owners, pools, etc; see AssetServices.get#AvailableInventory -->
     <service verb="get" noun="ProductQuantity">
         <in-parameters>
             <parameter name="productId" required="true"/>
@@ -124,6 +126,7 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
+    <!-- TODO: this service is not adequately constrained, will get inventory regardless of owner, pool, etc; see AssetServices.get#AvailableInventory -->
     <service verb="find" noun="ProductAvailability">
         <description>
             Create collection of product ids with availability flag.
@@ -388,9 +391,16 @@ along with this software (see the LICENSE.md file). If not, see
                     <entity-find-one entity-name="mantle.product.feature.ProductFeature" value-field="productFeature" cache="true">
                         <field-map field-name="productFeatureId" from="variantProductAssoc.productFeatureId"/>
                     </entity-find-one>
+                    <service-call name="popstore.ProductServices.get#ProductQuantity" out-map="productQuantity" in-map="[productId:variantProductAssoc.toProductId]"/>
                     <entity-find-one entity-name="moqui.basic.Enumeration" value-field="featureType" cache="true">
                         <field-map field-name="enumId" from="productFeature.productFeatureTypeEnumId"/>
                     </entity-find-one>
+
+                    <!-- Find variant contents -->
+                    <service-call name="popstore.ProductServices.find#ProductContentList" out-map="context" 
+                        in-map="[productId:variantProductAssoc.toProductId]"/>
+
+
                     <set field="item" from="[enumId:featureType.enumId, enumTypeId:featureType.enumTypeId, 
                         description:featureType.description, lastUpdatedStamp:featureType.lastUpdatedStamp]"/> 
                     <set field="content" from="[productFeatureTypeEnumId:productFeature.productFeatureTypeEnumId, 
@@ -407,7 +417,7 @@ along with this software (see the LICENSE.md file). If not, see
                             listFeatures.put(content, 
                             [[productFeatureId:productFeature.productFeatureId, 
                             productFeatureTypeEnumId:productFeature.productFeatureTypeEnumId, 
-                            description:productFeature.description, abbrev:productFeature.abbrev]])
+                            description:productFeature.description, abbrev:productFeature.abbrev, price:selectedPrices]])
                         } else {
                             boolean isItemInList = false
                             for(int i=0; i < featureSet.size(); i++) {
@@ -419,17 +429,17 @@ along with this software (see the LICENSE.md file). If not, see
                             if(!isItemInList) {
                                 featureSet.add([productFeatureId:productFeature.productFeatureId, 
                                 productFeatureTypeEnumId:productFeature.productFeatureTypeEnumId, 
-                                description:productFeature.description, abbrev:productFeature.abbrev])
+                                description:productFeature.description, abbrev:productFeature.abbrev, price:selectedPrices])
                             }
                         }
 
                         def optionSet = variantOptions.get(item)
                         if (!optionSet) {
-                            variantOptions.put(item, [[productId: variantProductAssoc.toProductId, description:productFeature.description,
-                            prices:selectedPrices]])
+                            variantOptions.put(item, [[productId: variantProductAssoc.toProductId, description:productFeature.description, quantity: productQuantity.productQuantity,
+                            prices:selectedPrices, contentList:productContentList]])
                         } else {
-                            optionSet.add([productId: variantProductAssoc.toProductId, description:productFeature.description,
-                            prices:selectedPrices])
+                            optionSet.add([productId: variantProductAssoc.toProductId, description:productFeature.description, quantity: productQuantity.productQuantity,
+                            prices:selectedPrices, contentList:productContentList])
                         }
                         priceSet = null
                     ]]></script>
@@ -566,7 +576,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="locale"/>
             <parameter name="orderBy" default-value="sequenceNum"/>
             <parameter name="pageIndex" default="0"/>
-            <parameter name="pageSize" default="6"/>
+            <parameter name="pageSize" default="100"/>
         </in-parameters>
         <out-parameters>
             <parameter name="productList" type="List"><parameter name="productInfo" type="Map">
@@ -708,6 +718,32 @@ along with this software (see the LICENSE.md file). If not, see
                 <if condition="productAssocs">
                     <set field="productId" from="productAssocs.get(0).productId"/>
                 </if>
+            </if>
+        </actions>
+    </service>
+
+     <service verb="find" noun="ProductContentList">
+        <description>
+            Try to find ProductContent records of a specified product.
+        </description>
+        <in-parameters>
+            <parameter name="productId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="productContentList"/>
+        </out-parameters>
+        <actions>
+            <entity-find entity-name="mantle.product.ProductContent" list="productContentList">
+                <date-filter/>
+                <econdition field-name="productId"/>
+                <select-field field-name="productContentId,productId,contentLocation,productContentTypeEnumId,fromDate"/>
+                <order-by field-name="sequenceNum,-fromDate"/>
+            </entity-find>
+
+            <if condition="locale">
+                <!-- filter after by locale to streamline cached find -->
+                <set field="langLocale" from="locale.contains('_') ? locale.substring(locale.indexOf('_')) : null"/>
+                <set field="productContentList" from="productContentList.findAll({ it.locale == null || it.locale == locale || it.locale == langLocale })"/>
             </if>
         </actions>
     </service>

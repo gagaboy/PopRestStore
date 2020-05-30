@@ -20,6 +20,9 @@ a:hover { text-decoration: none; }
 .bg-dark { background: #333333 !important; }
 .moqui-navbar .moqui-logo { width: 101px; }
 .moqui-logo1 { margin-top: -30px; margin-left: -10px; }
+
+.moqui-dynamic { width: 80px; margin-top: -40px; margin-left: -10px; margin-right: 20px; }
+
 .navbar-dark .navbar-nav .nav-link { color: white; }
 .navbar-title { margin-top: 10px; margin-left: -20px; display: inline-block; font-size: 2em; color: #fff; font-weight: bold; }
 .navbar-pop-title { color: #999999; font-size: 1.1em; display: inline-block; }
@@ -198,7 +201,7 @@ a:hover { text-decoration: none; }
 .checkmark:after { content: ""; position: absolute; display: none; }
 .container-input input:checked ~ .checkmark:after { display: block; }
 .container-input .checkmark:after { width: 9px; height: 9px; border-radius: 50%; background: #666666; }
-.div-checkmark { background-color: #e7e7e7; border-radius: 5px; }
+.div-checkmark { background-color: #e7e7e7; border-radius: 5px; padding-top: 10px;}
 
 .span-color span{ color: #adadad !important; }
 
@@ -322,3 +325,9 @@ a:hover { text-decoration: none; }
 /* Global */
 .pointer { cursor: pointer; }
 
+.selected-card-cvv input{
+    opacity: 1;
+}
+.checkout-payment-methods-list .delete-icon{
+    margin-top: 10px;
+}

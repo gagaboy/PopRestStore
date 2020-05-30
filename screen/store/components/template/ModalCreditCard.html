@@ -9,7 +9,7 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <form class="modal-body" @submit.prevent="addCustomerPaymentMethod" method="post">
+                        <form id="modal-card-content" class="modal-body" @submit.prevent="addCustomerPaymentMethod" method="post">
                             <div v-if="responseMessage != null && responseMessage != ''" 
                                 class="alert alert-primary" role="alert">
                                 {{responseMessage}}
@@ -46,17 +46,8 @@
                                     <select v-model="paymentMethod.expireYear" class="form-control ml-3"
                                         required>
                                         <option value="" disabled selected>Year</option>
-                                        <option v-for="n in 10" :value="(2017 + n)">{{2017 + n}}</option>
+                                        <option v-for="n in 10" :value="(2018 + n)">{{2018 + n}}</option>
                                     </select>
-                                </div>
-                            </div>
-                            <div class="form-group row justify-content-between">
-                                <label for="security" class="col-form-label ml-3">Security Code</label>
-                                <div class="col-sm-8 col-xs-12">
-                                    <input class="form-control" id="security"
-                                        type="text"
-                                        v-model="paymentMethod.cardSecurityCode"
-                                        placeholder="3 or 4 Digits" required/>
                                 </div>
                             </div>
                             <div class="form-group row justify-content-between" v-if="!isUpdate">
@@ -138,7 +129,7 @@
                                 </div>
                             </template>
                             <div class="row justify-content-center button-spacing">
-                                <button type="submit" class="btn btn-info col-sm-6">
+                                <button type="submit" class="btn btn-info col-sm-6" :disabled='isDisabled'>
                                     <span v-if="isUpdate">Update Card</span>
                                     <span v-else>Add Card</span>
                                 </button>
